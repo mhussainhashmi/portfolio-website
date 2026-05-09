@@ -1,0 +1,325 @@
+/* ================================================================
+   style.css
+================================================================ */
+
+:root {
+  --bg-color:      #f8f9fa;
+  --bg-mid:        #e9ecef;
+  --text-primary:  #212529;
+  --text-secondary:#6c757d;
+  --accent:        #0d6efd;
+  --accent-bright: #0d6efd;
+  --accent-dim:    #0b5ed7;
+  --navbar-bg:     rgba(248, 249, 250, 0.95);
+  --border-color:  rgba(0, 0, 0, 0.1);
+  --bar-width:  340px;
+  --bar-height: 14px;
+  --bar-radius: 999px;
+  /* Layer backgrounds for light theme: top lightest, bottom darkest */
+  --layer-hero:    linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  --layer-about:   #e9ecef;
+  --layer-projects:#dee2e6;
+  --layer-contact: #ced4da;
+  --layer-footer:  #adb5bd;
+}
+
+[data-bs-theme="dark"] {
+  --bg-color:      #050810;
+  --bg-mid:        #0a0f1e;
+  --text-primary:  #ffffff;
+  --text-secondary:#8899bb;
+  --accent:        #00aaff;
+  --accent-bright: #33ccff;
+  --accent-dim:    #0066aa;
+  --navbar-bg:     rgba(5, 8, 16, 0.95);
+  --border-color:  rgba(0, 170, 255, 0.15);
+  /* Layer backgrounds for dark theme: top lightest (less dark), bottom darkest */
+  --layer-hero:    linear-gradient(135deg, #0a0f1e 0%, #050810 100%);
+  --layer-about:   #050810;
+  --layer-projects:#020408;
+  --layer-contact: #010204;
+  --layer-footer:  #000000;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow-x: hidden; }
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+
+/* ================================================================
+   SCROLL REVEAL ANIMATIONS
+   How it works:
+   1. JS adds class "scroll-reveal" to every section and card on page load.
+   2. Elements with .scroll-reveal start invisible (opacity:0) and shifted down.
+   3. IntersectionObserver in main.js watches them.
+   4. When an element scrolls into view, JS adds class "revealed" to it.
+   5. The "revealed" class transitions it to fully visible and original position.
+
+   Different directions:
+   .reveal-up    → slides up into place (default, most sections)
+   .reveal-left  → slides in from the left (about text)
+   .reveal-right → slides in from the right (about photo)
+   .reveal-fade  → just fades in, no movement (subtle elements)
+================================================================ */
+
+/* Base state: invisible and shifted. Applied to all reveal elements. */
+.scroll-reveal {
+  opacity: 0;
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+/* Each direction variant: where the element starts before revealing */
+.reveal-up    { transform: translateY(40px); }
+.reveal-left  { transform: translateX(-40px); }
+.reveal-right { transform: translateX(40px); }
+.reveal-fade  { transform: none; }
+
+/* Revealed state: JS adds this class → element transitions to fully visible */
+.scroll-reveal.revealed {
+  opacity: 1;
+  transform: translate(0, 0); /* snaps back to original position */
+}
+
+/* Stagger delay: children inside a reveal container appear one after another.
+   JS adds these delay classes when setting up the observer. */
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+.reveal-delay-5 { transition-delay: 0.5s; }
+
+
+/* ── MOUSE SPOTLIGHT ────────────────────────────────────────── */
+#mouse-spotlight {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  mix-blend-mode: screen;
+}
+[data-bs-theme="dark"] #mouse-spotlight {
+  background: radial-gradient(circle 600px at var(--mouse-x,50%) var(--mouse-y,50%), rgba(255,0,174,0.217) 0%, rgba(194,24,24,0.055) 70%);
+}
+[data-bs-theme="light"] #mouse-spotlight {
+  background: radial-gradient(circle 500px at var(--mouse-x,50%) var(--mouse-y,50%), rgba(253, 13, 69, 0.916) 0%, rgba(255,0,140,0) 75%);
+}
+body:hover #mouse-spotlight { opacity: 1; }
+
+
+/* ── NAVBAR ─────────────────────────────────────────────────── */
+#main-navbar {
+  background-color: var(--navbar-bg);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+.navbar-brand {
+  color: var(--accent-bright) !important;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.8rem !important;
+  letter-spacing: -2px;
+  transition: transform 0.3s ease;
+}
+.navbar-brand:hover { transform: scale(1.05); }
+.nav-link { color: var(--text-secondary) !important; font-weight: 500; transition: color 0.3s ease; }
+.nav-link:hover, .nav-link.active { color: var(--text-primary) !important; }
+#theme-toggle { font-size: 1.5rem; transition: transform 0.4s ease; }
+#theme-toggle:hover { transform: rotate(30deg); }
+
+@media (max-width: 767px) {
+  .navbar-nav.flex-row { flex-direction: column !important; gap: 4px !important; }
+}
+
+
+/* ── HERO ───────────────────────────────────────────────────── */
+.hero-section {
+  background: var(--layer-hero);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  padding-top: 80px;
+  box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.05);
+}
+.accent-text   { color: var(--accent-bright); }
+.typing-effect { color: var(--accent); font-weight: 500; }
+.cursor { color: var(--accent-bright); animation: blink 0.7s step-end infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+.hero-section .d-flex.gap-3 { flex-wrap: wrap; justify-content: center; }
+@media (max-width: 480px) {
+  .hero-section .btn { width: 100%; text-align: center; }
+}
+
+
+/* ── BUTTONS ────────────────────────────────────────────────── */
+.magnetic-btn { position: relative; overflow: hidden; border-radius: 50px; transition: transform 0.15s ease; font-weight: 500; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+.magnetic-btn:hover { box-shadow: 0 12px 30px rgba(0,170,255,0.4), 0 6px 15px rgba(0,0,0,0.15); }
+
+.btn-primary { background-color: var(--accent); border-color: var(--accent); color: white; border-radius: 50px; padding: 12px 32px; font-weight: 500; transition: all 0.3s ease; }
+.btn-primary:hover { background-color: var(--accent-bright); border-color: var(--accent-bright); color: white; transform: translateY(-2px); }
+
+.btn-outline-light { border: 2px solid var(--text-primary); color: var(--text-primary); background-color: transparent; border-radius: 50px; padding: 12px 32px; font-weight: 500; transition: all 0.3s ease; }
+.btn-outline-light:hover { background-color: var(--text-primary); color: var(--bg-color); transform: translateY(-2px); }
+
+
+/* ── ABOUT ──────────────────────────────────────────────────── */
+#about {
+  background-color: var(--layer-about);
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.03);
+}
+.about-photo-card {
+  background-color: var(--bg-mid);
+  border-radius: 20px;
+  padding: 30px 20px;
+  text-align: center;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.15), 0 8px 20px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease;
+}
+.about-photo-card:hover { transform: translateY(-8px); }
+.about-photo-card img { width: 180px; height: 180px; object-fit: cover; border: 6px solid var(--accent); }
+
+@media (max-width: 992px) { .about-photo-card { margin-top: 30px; } }
+
+
+/* ── PROJECTS ───────────────────────────────────────────────── */
+#projects {
+  background-color: var(--layer-projects);
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.03);
+}
+.project-card {
+  height: 320px;
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  box-shadow: 0 12px 35px rgba(0,0,0,0.2), 0 6px 15px rgba(0,0,0,0.1);
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+.project-card:hover { transform: translateY(-12px); box-shadow: 0 25px 50px rgba(0,0,0,0.3), 0 10px 25px rgba(0,0,0,0.2); }
+.project-card img { width: 100%; height: 100%; object-fit: cover; transition: opacity 0.5s ease; }
+.project-card:hover img { opacity: 0.25; }
+
+.project-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(transparent, rgba(0,0,0,0.85));
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 30px;
+  color: white;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.project-card:hover .project-overlay { opacity: 1; }
+.project-overlay h5 { margin-bottom: 8px; font-size: 1.25rem; }
+.project-overlay p  { font-size: 0.95rem; opacity: 0.9; margin-bottom: 16px; }
+.project-overlay .btn { align-self: flex-start; border-radius: 50px; padding: 8px 24px; font-size: 0.9rem; }
+
+
+/* ── CONTACT ────────────────────────────────────────────────── */
+#contact {
+  background-color: var(--layer-contact);
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.03);
+}
+#contact-form .form-control { background-color: var(--bg-color); border: 2px solid rgba(0,170,255,0.2); color: var(--text-primary); }
+#contact-form .form-control:focus { border-color: var(--accent); box-shadow: 0 0 0 0.2rem rgba(0,170,255,0.15); background-color: var(--bg-color); color: var(--text-primary); }
+#submit-btn.loading { pointer-events: none; opacity: 0.8; }
+#submit-btn.loading::after { content: " Sending..."; }
+
+
+/* ── FOOTER ─────────────────────────────────────────────────── */
+footer {
+  background-color: var(--layer-footer);
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.03);
+}
+footer a:hover { color: var(--accent) !important; }
+
+
+/* ── LOADER ─────────────────────────────────────────────────── */
+#loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: opacity 0.8s ease, visibility 0.8s ease;
+}
+#loader.loader-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+#loader-bg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, #0d1530 0%, #050810 60%, #020408 100%);
+}
+#loader-content { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 28px; }
+
+#loader-letter {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: clamp(72px, 12vw, 120px);
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -2px;
+  text-shadow: 0 0 20px rgba(0,170,255,0.6), 0 0 60px rgba(0,170,255,0.3), 0 0 100px rgba(0,170,255,0.15);
+  opacity: 0;
+  transform: translateY(20px);
+  animation: letterAppear 0.9s cubic-bezier(0.22,1,0.36,1) 0.3s forwards;
+}
+@keyframes letterAppear { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+#loader-bar-track {
+  width: var(--bar-width); height: var(--bar-height); border-radius: var(--bar-radius);
+  position: relative; overflow: hidden;
+  background: rgba(0,100,160,0.15);
+  border: 1px solid rgba(0,170,255,0.25);
+  box-shadow: 0 0 12px rgba(0,170,255,0.15), inset 0 0 8px rgba(0,0,0,0.4);
+  opacity: 0; animation: fadeIn 0.6s ease 0.8s forwards;
+}
+@keyframes fadeIn { to { opacity: 1; } }
+
+#loader-bar-fill {
+  position: absolute; left:0; top:0; height:100%; width:0%;
+  border-radius: var(--bar-radius);
+  background: linear-gradient(90deg, #0066aa 0%, #00aaff 60%, #33ccff 100%);
+  box-shadow: 0 0 6px 1px rgba(255,255,255,0.6), 0 0 14px 2px rgba(0,170,255,0.9), 0 0 30px 4px rgba(0,170,255,0.6), 0 0 60px 6px rgba(0,170,255,0.3);
+  transition: width 0.05s linear;
+}
+
+#loader-bar-shine {
+  position: absolute; top:0; left:-60px; width:60px; height:100%;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%);
+  animation: shine 1.8s ease-in-out infinite;
+}
+@keyframes shine {
+  0%   { left:-60px; opacity:0; }
+  20%  { opacity:1; }
+  80%  { opacity:1; }
+  100% { left:calc(var(--bar-width) + 60px); opacity:0; }
+}
+
+#loader-percent {
+  font-family: 'Rajdhani', sans-serif; font-size:15px; font-weight:700;
+  letter-spacing:3px; color:#33ccff;
+  text-shadow: 0 0 10px rgba(0,170,255,0.8), 0 0 20px rgba(0,170,255,0.4);
+  opacity:0; animation: fadeIn 0.6s ease 1s forwards;
+}
+
+#main-page { opacity: 0; transition: opacity 0.8s ease; min-height: 100vh; }
+#main-page.page-visible { opacity: 1; }
+
+@media (max-width: 480px) { :root { --bar-width: 260px; --bar-height: 10px; } }
+@media (max-width: 576px) { .btn-lg { padding: 10px 24px !important; font-size: 1rem !important; } }

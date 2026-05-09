@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2WPQ93KE09"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-2WPQ93KE09');
+  </script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel — Hussein Hashmi</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <style>
+    /* Admin-only styles — kept here so style.css stays clean */
+    body { background-color: #050810; }
+
+    .admin-card {
+      background: #0a0f1e;
+      border: 1px solid rgba(0, 170, 255, 0.15);
+      border-radius: 12px;
+    }
+
+    .admin-card .card-header {
+      background: rgba(0, 170, 255, 0.08);
+      border-bottom: 1px solid rgba(0, 170, 255, 0.15);
+      font-weight: 500;
+      color: #33ccff;
+      padding: 14px 20px;
+    }
+
+    /* Each project row in the admin list */
+    .project-row {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .project-row h6 { margin-bottom: 4px; color: #fff; }
+    .project-row small { color: #8899bb; }
+
+    /* Message card */
+    .message-row {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+    }
+    .message-row.unread { border-left: 3px solid #00aaff; }
+
+    /* Login screen centering */
+    #login-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== LOGIN SCREEN ===== -->
+  <div id="login-screen">
+    <div style="width: 100%; max-width: 400px; padding: 1rem;">
+      <div class="admin-card">
+        <div class="card-header text-center">Admin Login</div>
+        <div class="card-body p-4">
+          <input
+            type="password"
+            id="admin-password"
+            class="form-control form-control-lg mb-3"
+            placeholder="Enter password"
+          />
+          <!-- Press Enter to login too -->
+          <button id="login-btn" class="btn btn-primary w-100 btn-lg">Login</button>
+          <div id="login-error" class="alert alert-danger mt-3 d-none">Incorrect password.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ===== ADMIN DASHBOARD (hidden until logged in) ===== -->
+  <div id="admin-dashboard" class="d-none">
+    <div class="container py-5">
+
+      <!-- Header row -->
+      <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+          <h2 class="mb-0" style="color: #33ccff; font-family: 'Rajdhani', sans-serif;">Admin Panel</h2>
+          <small class="text-secondary">Hussein Hashmi · Portfolio Manager</small>
+        </div>
+        <div class="d-flex gap-2">
+          <a href="index.html" class="btn btn-outline-secondary btn-sm">← View Site</a>
+          <button id="logout-btn" class="btn btn-outline-danger btn-sm">Logout</button>
+        </div>
+      </div>
+
+
+      <!-- ── ADD NEW PROJECT FORM ─────────────────────────────── -->
+      <div class="admin-card mb-4">
+        <div class="card-header">Add New Project</div>
+        <div class="card-body p-4">
+          <div class="row g-3">
+
+            <!-- Title (required — NOT NULL in Supabase) -->
+            <div class="col-md-6">
+              <label class="form-label text-secondary small">Title *</label>
+              <input type="text" id="project-title" class="form-control" placeholder="e.g. Portfolio Website" />
+            </div>
+
+            <!-- Technologies (required — NOT NULL in Supabase) -->
+            <!-- FIX: this field was missing. Supabase rejects inserts without it. -->
+            <div class="col-md-6">
+              <label class="form-label text-secondary small">Technologies *</label>
+              <input type="text" id="project-tech" class="form-control" placeholder="e.g. HTML · CSS · JavaScript" />
+            </div>
+
+            <!-- Description (required) -->
+            <div class="col-12">
+              <label class="form-label text-secondary small">Description *</label>
+              <textarea id="project-desc" class="form-control" rows="3" placeholder="Short description of the project"></textarea>
+            </div>
+
+            <!-- Live URL (optional) -->
+            <div class="col-md-6">
+              <label class="form-label text-secondary small">Live URL</label>
+              <input type="url" id="project-live" class="form-control" placeholder="https://yourproject.com" />
+            </div>
+
+            <!-- GitHub URL (optional) -->
+            <!-- FIX: this field was missing from the original admin form. -->
+            <div class="col-md-6">
+              <label class="form-label text-secondary small">GitHub URL</label>
+              <input type="url" id="project-github" class="form-control" placeholder="https://github.com/you/repo" />
+            </div>
+
+            <!-- Image URL (optional) -->
+            <div class="col-12">
+              <label class="form-label text-secondary small">Image URL (optional)</label>
+              <input type="url" id="project-image" class="form-control" placeholder="https://... (leave blank for auto placeholder)" />
+            </div>
+
+          </div>
+
+          <!-- Feedback message area (shown after add attempt) -->
+          <div id="add-feedback" class="mt-3"></div>
+
+          <button id="add-project-btn" class="btn btn-primary mt-3 px-4">
+            + Add Project
+          </button>
+        </div>
+      </div>
+
+
+      <!-- ── ABOUT SECTION EDITOR ───────────────────────────────── -->
+      <div class="admin-card mb-4">
+        <div class="card-header">Edit About Section</div>
+        <div class="card-body p-4">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label text-secondary small">Name</label>
+              <input type="text" id="about-name-input" class="form-control" placeholder="Hussein Hashmi" />
+            </div>
+            <div class="col-12">
+              <label class="form-label text-secondary small">Main bio text</label>
+              <textarea id="about-bio-main-input" class="form-control" rows="3" placeholder="Main About text"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label text-secondary small">Secondary bio text</label>
+              <textarea id="about-bio-sub-input" class="form-control" rows="3" placeholder="Additional About details"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label text-secondary small">Profile image URL</label>
+              <input type="url" id="about-photo-input" class="form-control" placeholder="https://... (leave blank if none)" />
+            </div>
+          </div>
+
+          <div id="about-feedback" class="mt-3"></div>
+          <button id="save-about-btn" class="btn btn-primary mt-3 px-4">Save About Section</button>
+        </div>
+      </div>
+
+
+      <!-- ── PROJECTS LIST ──────────────────────────────────────── -->
+      <div class="admin-card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span>Current Projects</span>
+          <!-- Shows the count once loaded -->
+          <span id="projects-count" class="badge" style="background: rgba(0,170,255,0.2); color: #33ccff;"></span>
+        </div>
+        <div class="card-body p-4" id="projects-list">
+          <p class="text-secondary">Loading...</p>
+        </div>
+      </div>
+
+
+      <!-- ── MESSAGES ───────────────────────────────────────────── -->
+      <div class="admin-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span>Contact Messages</span>
+          <span id="messages-count" class="badge" style="background: rgba(0,170,255,0.2); color: #33ccff;"></span>
+        </div>
+        <div class="card-body p-4" id="messages-list">
+          <p class="text-secondary">Loading...</p>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- end #admin-dashboard -->
+
+
+  <!-- Message Modal -->
+<div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content" style="background: #0a0f1e; border: 1px solid rgba(0,170,255,0.15);">
+      <div class="modal-header" style="border-bottom: 1px solid rgba(0,170,255,0.15);">
+        <h5 class="modal-title" id="messageModalLabel" style="color: #33ccff;">Message Details</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" style="max-height: 70vh; overflow-y: auto; padding: 20px;">
+        <div id="modal-message-content" style="white-space: pre-wrap; word-break: break-word; line-height: 1.6;"></div>
+      </div>
+      <div class="modal-footer">
+        <button id="mark-read-btn" class="btn btn-primary">Mark as Read</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  <!-- Scripts — same order rules as index.html -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // ================================================================
+    // ADMIN PANEL JAVASCRIPT
+    // All code is inside this <script> tag in admin.html because
+    // admin.js would be a separate file — but keeping it here means
+    // we don't need an extra HTTP request. Either approach is fine.
+    // ================================================================
+
+    // Hard-coded password — fine for a personal portfolio.
+    // In future versions this becomes Supabase Auth.
+    const ADMIN_PASSWORD = 'hussein2026';
+
+    const loginScreen  = document.getElementById('login-screen');
+    const dashboard    = document.getElementById('admin-dashboard');
+    const passwordInput = document.getElementById('admin-password');
+    const loginError   = document.getElementById('login-error');
+
+
+    // ── LOGIN ──────────────────────────────────────────────────────
+    document.getElementById('login-btn').addEventListener('click', tryLogin);
+
+    // Allow pressing Enter to submit the password
+    passwordInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') tryLogin();
+    });
+
+    function tryLogin() {
+      if (passwordInput.value === ADMIN_PASSWORD) {
+        loginScreen.classList.add('d-none');
+        dashboard.classList.remove('d-none');
+        loadAdminData(); // load everything once logged in
+      } else {
+        loginError.classList.remove('d-none');
+        passwordInput.value = '';
+        passwordInput.focus();
+      }
+    }
+
+    // ── LOGOUT ────────────────────────────────────────────────────
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      dashboard.classList.add('d-none');
+      loginScreen.classList.remove('d-none');
+      loginError.classList.add('d-none');
+      passwordInput.value = '';
+    });
+
+
+    // ── LOAD ALL DATA ─────────────────────────────────────────────
+    // One function that loads both projects and messages.
+    // We call this on login and again after add/delete so the
+    // list always reflects the latest database state.
+    async function loadAdminData() {
+      await loadProjects();
+      await loadMessages();
+      await loadAboutAdmin();
+    }
+
+
+    async function loadAboutAdmin() {
+      const nameInput    = document.getElementById('about-name-input');
+      const bioMainInput = document.getElementById('about-bio-main-input');
+      const bioSubInput  = document.getElementById('about-bio-sub-input');
+      const photoInput   = document.getElementById('about-photo-input');
+
+      if (!nameInput || !bioMainInput || !bioSubInput || !photoInput) return;
+
+      const { data, error } = await window.supabaseClient
+        .from('about_content')
+        .select('*')
+        .eq('id', 1)
+        .single();
+
+      if (error || !data) return;
+
+      nameInput.value    = data.heading || '';
+      bioMainInput.value = data.bio_main || '';
+      bioSubInput.value  = data.bio_sub || '';
+      photoInput.value   = data.image_url || '';
+    }
+
+
+    document.getElementById('save-about-btn').addEventListener('click', async () => {
+      const name    = document.getElementById('about-name-input').value.trim();
+      const bioMain = document.getElementById('about-bio-main-input').value.trim();
+      const bioSub  = document.getElementById('about-bio-sub-input').value.trim();
+      const photo   = document.getElementById('about-photo-input').value.trim();
+
+      if (!name || !bioMain || !bioSub) {
+        showAboutFeedback('Name and both About text fields are required.', 'danger');
+        return;
+      }
+
+      const btn = document.getElementById('save-about-btn');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      const { error } = await window.supabaseClient
+        .from('about_content')
+        .upsert([{
+          id: 1,
+          heading:   name,
+          bio_main:  bioMain,
+          bio_sub:   bioSub,
+          image_url: photo || null,
+        }], { onConflict: 'id' });
+
+      btn.disabled = false;
+      btn.textContent = 'Save About Section';
+
+      if (error) {
+        showAboutFeedback('Failed to save About section: ' + error.message, 'danger');
+        return;
+      }
+
+      showAboutFeedback('About section updated successfully.', 'success');
+    });
+
+
+    function showAboutFeedback(text, type) {
+      const el = document.getElementById('about-feedback');
+      if (!el) return;
+      el.innerHTML = `<div class="alert alert-${type} py-2 mb-0">${text}</div>`;
+      setTimeout(() => el.innerHTML = '', 4000);
+    }
+
+
+    // ── LOAD PROJECTS ─────────────────────────────────────────────
+    async function loadProjects() {
+      const list  = document.getElementById('projects-list');
+      const count = document.getElementById('projects-count');
+      list.innerHTML = '<p class="text-secondary">Loading...</p>';
+
+      const { data: projects, error } = await window.supabaseClient
+        .from('projects')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        list.innerHTML = `<p class="text-danger">Error: ${error.message}</p>`;
+        return;
+      }
+
+      count.textContent = projects.length + ' projects';
+
+      if (projects.length === 0) {
+        list.innerHTML = '<p class="text-secondary">No projects yet. Add one above.</p>';
+        return;
+      }
+
+      list.innerHTML = '';
+
+      projects.forEach(project => {
+        const row = document.createElement('div');
+        row.className = 'project-row';
+        row.innerHTML = `
+          <div style="flex: 1; min-width: 0;">
+            <h6>${project.title}</h6>
+            <small>${project.technologies || ''}</small><br>
+            <small class="text-secondary">${project.description || ''}</small>
+          </div>
+          <div class="d-flex gap-2 flex-shrink-0">
+            ${project.live_url   ? `<a href="${project.live_url}"   target="_blank" class="btn btn-outline-secondary btn-sm">Live</a>`   : ''}
+            ${project.github_url ? `<a href="${project.github_url}" target="_blank" class="btn btn-outline-secondary btn-sm">GitHub</a>` : ''}
+            <!-- FIX: delete button now has data-id attribute so the event
+                 listener below knows WHICH project to delete -->
+            <button class="btn btn-outline-danger btn-sm delete-btn" data-id="${project.id}">Delete</button>
+          </div>
+        `;
+        list.appendChild(row);
+      });
+    }
+
+
+    // ── DELETE PROJECT ────────────────────────────────────────────
+    // FIX: previously the delete buttons were rendered but had NO
+    // event listener — clicking them did nothing.
+    //
+    // We use EVENT DELEGATION: instead of attaching a listener to
+    // each button (which would break when the list re-renders),
+    // we attach ONE listener to the parent container.
+    // When any button inside it is clicked, the event "bubbles up"
+    // to the container, and we check if the clicked element was
+    // a delete button using .closest('.delete-btn').
+    document.getElementById('projects-list').addEventListener('click', async (e) => {
+      const btn = e.target.closest('.delete-btn');
+      if (!btn) return; // click was on something else — ignore
+
+      const id = btn.dataset.id; // reads the data-id="..." attribute
+      const confirmed = confirm('Delete this project? This cannot be undone.');
+      if (!confirmed) return;
+
+      btn.disabled = true;
+      btn.textContent = 'Deleting...';
+
+      const { error } = await window.supabaseClient
+        .from('projects')
+        .delete()
+        .eq('id', id); // eq = "equals" — only delete the row where id matches
+
+      if (error) {
+        alert('Error deleting: ' + error.message);
+        btn.disabled = false;
+        btn.textContent = 'Delete';
+        return;
+      }
+
+      // Reload the list so the deleted project disappears immediately
+      await loadProjects();
+    });
+
+
+    // ── LOAD MESSAGES ─────────────────────────────────────────────
+    // NOTE ON RLS: The messages table has no SELECT policy, so the
+    // anon key cannot read messages. This is correct security —
+    // visitors should not be able to read each other's messages.
+    //
+    // For now we work around this by using the supabaseClient with
+    // the anon key. If messages return empty, you need to add a
+    // SELECT policy in Supabase for the authenticated role, or
+    // upgrade to Supabase Auth for the admin (Phase 2).
+    //
+    // Quick fix: run this SQL in Supabase SQL Editor to allow reads:
+    // CREATE POLICY "Admin can read messages" ON messages
+    //   FOR SELECT USING (true);
+    async function loadMessages() {
+      const list  = document.getElementById('messages-list');
+      const count = document.getElementById('messages-count');
+      list.innerHTML = '<p class="text-secondary">Loading...</p>';
+
+      const { data: messages, error } = await window.supabaseClient
+        .from('messages')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        list.innerHTML = `
+          <p class="text-warning">
+            Cannot load messages: ${error.message}<br>
+            <small>Run this SQL in Supabase: <code>CREATE POLICY "Admin can read messages" ON messages FOR SELECT USING (true);</code></small>
+          </p>`;
+        return;
+      }
+
+      count.textContent = messages.length + ' messages';
+
+      if (messages.length === 0) {
+        list.innerHTML = '<p class="text-secondary">No messages yet.</p>';
+        return;
+      }
+
+      list.innerHTML = '';
+
+      messages.forEach(msg => {
+        const div = document.createElement('div');
+        // Unread messages get a blue left border (is_read defaults to false)
+        div.className = `message-row ${msg.is_read ? '' : 'unread'}`;
+        const truncatedMessage = msg.message.length > 100 ? msg.message.substring(0, 100) + '...' : msg.message;
+        div.innerHTML = `
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <strong>${msg.name || 'Anonymous'}</strong>
+              <span class="text-secondary ms-2">&lt;${msg.email}&gt;</span>
+              ${!msg.is_read ? '<span class="badge ms-2" style="background:rgba(0,170,255,0.2);color:#33ccff;">New</span>' : ''}
+            </div>
+            <small class="text-secondary flex-shrink-0 ms-3">
+              ${new Date(msg.created_at).toLocaleString()}
+            </small>
+          </div>
+          <p class="mt-2 mb-0 text-secondary message-text" style="cursor: pointer;" data-id="${msg.id}" data-full="${msg.message.replace(/"/g, '&quot;')}">${truncatedMessage}</p>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+
+    // ── MESSAGE MODAL EVENT LISTENERS ─────────────────────────────
+    // Click on message to open modal
+    document.getElementById('messages-list').addEventListener('click', (e) => {
+      if (e.target.classList.contains('message-text')) {
+        const id = e.target.dataset.id;
+        const fullMessage = e.target.dataset.full;
+        document.getElementById('modal-message-content').innerHTML = `<p style="color: #fff; white-space: pre-wrap;">${fullMessage}</p>`;
+        const modal = new bootstrap.Modal(document.getElementById('messageModal'));
+        modal.show();
+        // Store the message id for marking as read
+        document.getElementById('mark-read-btn').dataset.id = id;
+      }
+    });
+
+    // Mark as read button
+    document.getElementById('mark-read-btn').addEventListener('click', async () => {
+      const id = document.getElementById('mark-read-btn').dataset.id;
+      const { error } = await window.supabaseClient
+        .from('messages')
+        .update({ is_read: true })
+        .eq('id', id);
+      if (error) {
+        alert('Error marking as read: ' + error.message);
+        return;
+      }
+      // Close modal
+      const modal = bootstrap.Modal.getInstance(document.getElementById('messageModal'));
+      modal.hide();
+      // Reload messages
+      await loadMessages();
+    });
+
+
+    // ── ADD PROJECT ───────────────────────────────────────────────
+    document.getElementById('add-project-btn').addEventListener('click', async () => {
+      const title  = document.getElementById('project-title').value.trim();
+      const tech   = document.getElementById('project-tech').value.trim();
+      const desc   = document.getElementById('project-desc').value.trim();
+      const live   = document.getElementById('project-live').value.trim();
+      const github = document.getElementById('project-github').value.trim();
+      const image  = document.getElementById('project-image').value.trim();
+
+      // Validate required fields (title and technologies are NOT NULL)
+      if (!title || !tech || !desc) {
+        showAddFeedback('Title, Technologies and Description are required.', 'danger');
+        return;
+      }
+
+      const btn = document.getElementById('add-project-btn');
+      btn.disabled = true;
+      btn.textContent = 'Adding...';
+
+      const { error } = await window.supabaseClient
+        .from('projects')
+        .insert({
+          title:        title,
+          technologies: tech,
+          description:  desc,
+          live_url:     live   || null, // null if empty (not empty string)
+          github_url:   github || null,
+          image_url:    image  || null,
+        });
+
+      btn.disabled = false;
+      btn.textContent = '+ Add Project';
+
+      if (error) {
+        showAddFeedback('Error: ' + error.message, 'danger');
+        return;
+      }
+
+      // Clear all form fields after success
+      ['project-title','project-tech','project-desc',
+       'project-live','project-github','project-image'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+
+      showAddFeedback('Project added successfully!', 'success');
+
+      // FIX: reload the projects list immediately so the new project
+      // appears right away without needing to refresh the page
+      await loadProjects();
+    });
+
+
+    // Helper: show feedback under the add form
+    function showAddFeedback(text, type) {
+      const el = document.getElementById('add-feedback');
+      el.innerHTML = `<div class="alert alert-${type} py-2 mb-0">${text}</div>`;
+      setTimeout(() => el.innerHTML = '', 4000);
+    }
+
+  </script>
+</body>
+</html>
